@@ -5,6 +5,7 @@ import android.support.percent.PercentRelativeLayout;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -38,6 +39,9 @@ public class SongMenuHead extends FrameLayout {
         View view = LayoutInflater.from(MyApplication.getContext()).inflate(R.layout.song_menu_content_head, this);
         songMenuImage = (SongMenuImage) view.findViewById(R.id.image);
         textView = (TextView) view.findViewById(R.id.title);
+
+        FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        setLayoutParams(layoutParams);
     }
 
     public TextView getTextView() {

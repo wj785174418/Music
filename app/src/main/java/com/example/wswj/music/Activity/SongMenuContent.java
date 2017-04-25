@@ -9,10 +9,13 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.v4.graphics.drawable.DrawableCompat;
+import android.support.v4.view.GravityCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -30,26 +33,24 @@ import com.example.wswj.music.Util.DensityUtil;
 import com.example.wswj.music.Util.HttpUtil;
 import com.example.wswj.music.Util.LogUtil;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import jp.wasabeef.glide.transformations.BlurTransformation;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Response;
 
 public class SongMenuContent extends BaseActivity {
     //handler msg
-    private static final int SONG_MENU_GOT = 100;
-
-
-    //轮播图传入歌单
-    public static final int TYPE_ROLL_BANNER = 1;
-    //推荐歌单传入
-    public static final int TYPE_RECOMMEND = 2;
-    //热门歌单传入
-    public static final int TYPE_HOT = 3;
-    //分类传入
-    public static final int TYPE_CATEGORY = 4;
+    public static final int SONG_MENU_IMAGE_GOT = 1000;
 
     private Toolbar toolbar;
 
@@ -61,13 +62,22 @@ public class SongMenuContent extends BaseActivity {
 
     private SongMenu mSongMenu;
 
+    private int toolBarHeight;
+
+    private int scrollY;
+
+    private int toolBarBgAlpha;
+
     private Handler handler = new Handler(new Handler.Callback() {
         @Override
         public boolean handleMessage(Message msg) {
             switch (msg.what) {
-                case SONG_MENU_GOT:
+                case SONG_MENU_IMAGE_GOT:
                     setToolBarBg(mSongMenu.getPicUrl());
                     adapter.setSongMenu(mSongMenu);
+                    break;
+                case HttpUtil.UPDATE:
+                    adapter.notifyDataSetChanged();
                     break;
                 default:
                     break;
@@ -76,10 +86,9 @@ public class SongMenuContent extends BaseActivity {
         }
     });
 
-    public static void actionStart(Context context, SongMenu songMenu, int songMenuType) {
+    public static void actionStart(Context context, SongMenu songMenu) {
         Intent intent = new Intent(context, SongMenuContent.class);
         intent.putExtra("songMenu", songMenu);
-        intent.putExtra("songMenuType", songMenuType);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent);
     }
@@ -88,6 +97,8 @@ public class SongMenuContent extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_song_menu_content);
+
+        scrollY = 0;
 
         int statusBarHeight = DensityUtil.getStatusBarHeight();
 
@@ -101,7 +112,8 @@ public class SongMenuContent extends BaseActivity {
                 @Override
                 public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
                     if (bottom != oldBottom) {
-                        adapter.setHeadPaddingTop(bottom - top);
+                        toolBarHeight = bottom - top;
+                        adapter.setHeadPaddingTop(toolBarHeight);
                     }
                 }
             });
@@ -128,34 +140,63 @@ public class SongMenuContent extends BaseActivity {
 
         recyclerView.setAdapter(adapter);
 
+        recyclerViewAddListener();
+
         //解析intent,获取歌单详细信息
         Intent intent = getIntent();
-        int type = intent.getIntExtra("songMenuType", 0);
-        if (type == TYPE_RECOMMEND || type == TYPE_HOT) {
-            mSongMenu = (SongMenu) intent.getSerializableExtra("songMenu");
-            handler.sendEmptyMessage(SONG_MENU_GOT);
-        } else if (type == TYPE_ROLL_BANNER) {
+        mSongMenu = (SongMenu) intent.getSerializableExtra("songMenu");
+        HttpUtil.songList(mSongMenu, songList, handler);
+    }
 
-        } else if (type == TYPE_CATEGORY) {
-
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                break;
+            default:
+                break;
         }
+        return true;
     }
 
     private void setToolBarBg(String imageUrl) {
         final SimpleTarget<GlideDrawable> blurDrawable = new SimpleTarget<GlideDrawable>() {
             @Override
             public void onResourceReady(GlideDrawable resource, GlideAnimation<? super GlideDrawable> glideAnimation) {
-                resource.setAlpha(0);
-                if (Build.VERSION.SDK_INT >= 16) {
-                    toolbar.setBackground(resource);
-                } else {
-                    toolbar.setBackgroundDrawable(resource);
-                }
+                toolbar.setBackgroundDrawable(resource);
+                toolbar.getBackground().mutate().setAlpha(0);
+                toolBarBgAlpha = 0;
             }
         };
 
         Glide.with(this).load(imageUrl)
                 .bitmapTransform(new BlurTransformation(this, 16, 50))
                 .into(blurDrawable);
+    }
+
+    private void recyclerViewAddListener() {
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                scrollY += dy;
+                setToolBarBgAlpha(scrollY);
+            }
+        });
+    }
+
+    private void setToolBarBgAlpha(float offset) {
+        int alpha = 255;
+        float totalDistance = adapter.getHeadHeight() - toolBarHeight;
+        if (offset < totalDistance) {
+            alpha = (int) (offset / totalDistance * 255);
+        }
+
+        Drawable toolBarBg = toolbar.getBackground();
+        if (toolBarBg != null && toolBarBgAlpha != alpha) {
+            toolBarBg.mutate().setAlpha(alpha);
+            toolBarBgAlpha = alpha;
+        }
     }
 }

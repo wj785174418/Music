@@ -4,7 +4,9 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.NonNull;
 
+import com.example.wswj.music.Activity.SongMenuContent;
 import com.example.wswj.music.Model.RollPicture;
+import com.example.wswj.music.Model.Song;
 import com.example.wswj.music.Model.SongMenu;
 
 import org.json.JSONArray;
@@ -12,6 +14,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import okhttp3.Call;
@@ -49,6 +52,11 @@ public class HttpUtil {
     //百度音乐热门歌单
     private static final String HOT = "http://tingapi.ting.baidu.com/v1/restserver/ting?method=baidu.ting.diy.gedan&page_no=1&page_size=%s&format=json";
 
+    //推荐、热门点击传入参数,歌单详情
+    private static final String SONGMENU_HOT_REC = "http://tingapi.ting.baidu.com/v1/restserver/ting?method=baidu.ting.diy.gedanInfo&listid=%s&format=json";
+
+    //轮播图点击传入参数url
+    private static final String SONGMENU_ROLLBANNER = "http://tingapi.ting.baidu.com/v1/restserver/ting?method=baidu.ting.album.getAlbumInfo&album_id=%s&format=json";
 
     //client
     private static OkHttpClient client = new OkHttpClient();
@@ -219,6 +227,116 @@ public class HttpUtil {
                 }
             }
         });
+    }
+
+    /**
+     * 根据不同类型歌单，获取歌曲列表
+     * @param songMenu 歌单实例
+     * @param songList 歌曲列表
+     * @param handler  handler
+     */
+    public static void songList(final SongMenu songMenu, final List<Song> songList, final Handler handler) {
+        final String songMenuID = songMenu.getSongMenuID();
+        final int type = songMenu.getType();
+        String url = null;
+        if (type == SongMenu.TYPE_RECOMMEND || type == SongMenu.TYPE_HOT) {
+            handler.sendEmptyMessage(SongMenuContent.SONG_MENU_IMAGE_GOT);
+            url = String.format(SONGMENU_HOT_REC, songMenuID);
+        } else if (type == SongMenu.TYPE_ROLL_BANNER) {
+            url = String.format(SONGMENU_ROLLBANNER, songMenuID);
+        } else if (type == SongMenu.TYPE_CATEGORY) {
+
+        }
+
+        HttpUtil.sendGETRequest(url, new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                List<Song> songs = null;
+                if (type == SongMenu.TYPE_RECOMMEND || type == SongMenu.TYPE_HOT) {
+                    songs = songListHotRec(response);
+                } else if (type == SongMenu.TYPE_ROLL_BANNER) {
+                    songs = songListRollBanner(response, songMenu, handler);
+                } else if (type == SongMenu.TYPE_CATEGORY) {
+
+                }
+                songList.addAll(songs);
+                if (songList.size() > 0) {
+                    handler.sendEmptyMessage(HttpUtil.UPDATE);
+                }
+            }
+        });
+    }
+
+    /**
+     * 热门、推荐歌曲列表解析
+     * @param response 响应数据
+     */
+    private static List<Song> songListHotRec(Response response) throws IOException {
+        List<Song> songList = new ArrayList<>();
+        try {
+            String resultStr = response.body().string();
+            JSONObject result = new JSONObject(resultStr);
+            if (result.getInt("error_code") == 22000) {
+                JSONArray list = result.getJSONArray("content");
+                for (int i = 0; i < list.length(); i++) {
+                    JSONObject songJson = list.getJSONObject(i);
+                    Song song = new Song();
+                    song.setTitle(songJson.getString("title"));
+                    song.setSongID(songJson.getString("song_id"));
+                    song.setAuthor(songJson.getString("author"));
+                    song.setAlbumID(songJson.getString("album_id"));
+                    song.setAlbumTitle(songJson.getString("album_title"));
+                    songList.add(song);
+                }
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return songList;
+    }
+
+    /**
+     * 轮播图歌曲列表解析
+     * @param response 响应数据
+     * @param songMenu 歌单实例
+     * @param handler  handler
+     * @return  歌曲列表
+     * @throws IOException
+     */
+    private static List<Song> songListRollBanner(Response response, SongMenu songMenu, Handler handler) throws IOException {
+        List<Song> songList = new ArrayList<>();
+        try {
+            String resultStr = response.body().string();
+            JSONObject result = new JSONObject(resultStr);
+            JSONObject albumInfo = result.getJSONObject("albumInfo");
+            String imageUrl = albumInfo.getString("pic_s500");
+            String author = albumInfo.getString("author");
+            String title = albumInfo.getString("title");
+
+            songMenu.setPicUrl(imageUrl);
+            songMenu.setTitle(String.format("『%s』  %s", title, author));
+            handler.sendEmptyMessage(SongMenuContent.SONG_MENU_IMAGE_GOT);
+
+            JSONArray list = result.getJSONArray("songlist");
+            for (int i = 0; i < list.length(); i++) {
+                JSONObject songJson = list.getJSONObject(i);
+                Song song = new Song();
+                song.setTitle(songJson.getString("title"));
+                song.setSongID(songJson.getString("song_id"));
+                song.setAuthor(songJson.getString("author"));
+                song.setAlbumID(songJson.getString("album_id"));
+                song.setAlbumTitle(songJson.getString("album_title"));
+                songList.add(song);
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return songList;
     }
 
     /**

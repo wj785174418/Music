@@ -8,4 +8,5 @@
     <color name="white">#fff</color>
     <color name="dim_grey">#696969</color>
     <color name="grey">#bebebe</color>
+    <color name="dark_gray">#a9a9a9</color>
 </resources>

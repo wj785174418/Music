@@ -22,6 +22,7 @@
         android:layout_gravity="center_vertical"
         android:text="更多"
         android:textColor="@color/black"
-        style="@style/Widget.AppCompat.Button.Borderless" />
+        style="@style/Widget.AppCompat.Button.Borderless"
+        android:background="@drawable/touch_bg"/>
 
 </LinearLayout>

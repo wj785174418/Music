@@ -22,10 +22,12 @@ import com.bumptech.glide.load.resource.bitmap.BitmapTransformation;
 import com.bumptech.glide.load.resource.drawable.GlideDrawable;
 import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.SimpleTarget;
+import com.example.wswj.music.CustomView.SongInfoSimple;
 import com.example.wswj.music.CustomView.SongMenuHead;
 import com.example.wswj.music.Model.Song;
 import com.example.wswj.music.Model.SongMenu;
 import com.example.wswj.music.R;
+import com.example.wswj.music.Util.LogUtil;
 import com.example.wswj.music.Util.MyApplication;
 
 import java.util.List;
@@ -54,6 +56,8 @@ public class SongMenuContentAdapter extends RecyclerView.Adapter<ViewHolder> {
 
     private SongMenu mSongMenu;
 
+
+    private int headHeight;
 
     /*
     * head背景layerDrawable
@@ -84,26 +88,54 @@ public class SongMenuContentAdapter extends RecyclerView.Adapter<ViewHolder> {
 
         if (viewType == TYPE_IMAGE) {
             SongMenuHead songMenuHead = new SongMenuHead(MyApplication.getContext());
-            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            songMenuHead.setLayoutParams(layoutParams);
             songMenuHead.setPadding(0, headPaddingTop, 0, 0);
             headHolder = new ViewHolder(songMenuHead);
             songMenuHead.setBackgroundResource(R.drawable.song_menu_head_bg);
 
+            songMenuHead.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+                @Override
+                public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
+                    int height = bottom - top;
+                    if (height != headHeight) {
+                        headHeight = height;
+                    }
+                }
+            });
+
             if (mSongMenu != null) {
                 setHead();
             }
-
             return headHolder;
         } else if (viewType == TYPE_SONG) {
+            SongInfoSimple songInfoSimple = new SongInfoSimple(MyApplication.getContext());
 
+            songInfoSimple.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                }
+            });
+
+            return new ViewHolder(songInfoSimple);
         }
         return null;
     }
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
+        if (position > 0) {
+            Song song = mSongList.get(position - 1);
 
+            SongInfoSimple songInfoSimple = (SongInfoSimple) holder.itemView;
+            songInfoSimple.getNum().setText("" + position);
+            songInfoSimple.getTitle().setText(song.getTitle());
+
+            StringBuilder songInfo = new StringBuilder(song.getAuthor());
+            if (song.getAlbumTitle().length() != 0) {
+                songInfo.append(" - " + song.getAlbumTitle());
+            }
+            songInfoSimple.getInfo().setText(songInfo.toString());
+        }
     }
 
     @Override
@@ -138,7 +170,10 @@ public class SongMenuContentAdapter extends RecyclerView.Adapter<ViewHolder> {
         songMenuHead.getTextView().setText(title);
 
         //听众人数
-        songMenuHead.getSongMenuImage().getListenNum().setText(mSongMenu.getListenNum());
+        if (mSongMenu.getListenNum() != null) {
+            songMenuHead.getSongMenuImage().getListenNum().setText(mSongMenu.getListenNum());
+        }
+
 
         //歌单图片
         Glide.with(MyApplication.getContext())
@@ -218,6 +253,9 @@ public class SongMenuContentAdapter extends RecyclerView.Adapter<ViewHolder> {
 //        });
     }
 
+    public int getHeadHeight() {
+        return headHeight;
+    }
 }
 
 

@@ -213,27 +213,29 @@ public class HotSongMenuAdapter extends SectionedRecyclerViewAdapter<ViewHolder,
                 squareSongMenu.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
+                        songMenu.setType(SongMenu.TYPE_RECOMMEND);
                         SongMenuContent.actionStart(MyApplication.getContext(),
-                                songMenu, SongMenuContent.TYPE_RECOMMEND);
+                                songMenu);
                     }
                 });
             }
         } else if (section == 2) {
-            final SongMenu songMenuHot = mSongMenuHotList.get(position);
+            final SongMenu songMenu = mSongMenuHotList.get(position);
 
             LongSongMenu longSongMenu = (LongSongMenu) holder.itemView;
-            longSongMenu.getTitle().setText(songMenuHot.getTitle());
-            longSongMenu.getDesc().setText(songMenuHot.getDesc());
-            longSongMenu.getSongMenuImage().getListenNum().setText(songMenuHot.getListenNum());
+            longSongMenu.getTitle().setText(songMenu.getTitle());
+            longSongMenu.getDesc().setText(songMenu.getDesc());
+            longSongMenu.getSongMenuImage().getListenNum().setText(songMenu.getListenNum());
             Glide.with(MyApplication.getContext())
-                    .load(songMenuHot.getPicUrl())
+                    .load(songMenu.getPicUrl())
                     .into(longSongMenu.getSongMenuImage().getImageView());
 
             longSongMenu.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    songMenu.setType(SongMenu.TYPE_HOT);
                     SongMenuContent.actionStart(MyApplication.getContext(),
-                            songMenuHot, SongMenuContent.TYPE_HOT);
+                            songMenu);
                 }
             });
         }
@@ -279,8 +281,9 @@ public class HotSongMenuAdapter extends SectionedRecyclerViewAdapter<ViewHolder,
                         @Override
                         public void onClick(View v) {
                             SongMenu songMenu = new SongMenu(rollPic.getAlbumID(), null, null, null, null);
+                            songMenu.setType(SongMenu.TYPE_ROLL_BANNER);
                             SongMenuContent.actionStart(MyApplication.getContext(),
-                                    songMenu, SongMenuContent.TYPE_ROLL_BANNER);
+                                    songMenu);
                         }
                     });
 
