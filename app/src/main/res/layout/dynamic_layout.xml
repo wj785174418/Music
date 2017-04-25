@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#d6a78f">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textSize="40sp"
+                android:text="动态"/>
+
+            <Button
+                android:text="发送请求"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/button" />
+
+            <Button
+                android:text="推荐歌单"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/re_ge" />
+            <Button
+                android:text="热门歌单"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/hot_ge" />
+        </LinearLayout>
+
+    </ScrollView>
+
+
+</LinearLayout>

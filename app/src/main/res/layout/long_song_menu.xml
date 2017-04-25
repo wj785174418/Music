@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.percent.PercentRelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="2dp"
+    android:background="@drawable/touch_bg">
+
+    <com.example.wswj.music.CustomView.SongMenuImage
+        android:id="@+id/song_menu_image"
+        app:layout_widthPercent="33%"
+        android:layout_height="wrap_content"/>
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_alignParentRight="true"
+        android:layout_toRightOf="@id/song_menu_image"
+        android:layout_margin="5dp"
+        android:layout_height="wrap_content"
+        android:textSize="15sp"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:textColor="@color/black"
+        />
+
+    <View
+        android:id="@+id/line"
+        android:layout_height="1dp"
+        android:layout_below="@id/title"
+        android:layout_alignRight="@id/title"
+        android:layout_alignLeft="@id/title"
+        android:background="@color/black"/>
+
+    <TextView
+        android:id="@+id/desc"
+        android:layout_below="@id/line"
+        android:layout_alignParentRight="true"
+        android:layout_toRightOf="@id/song_menu_image"
+        android:layout_alignBottom="@id/song_menu_image"
+        android:maxLines="5"
+        android:ellipsize="end"
+        android:textSize="12sp"
+        android:textColor="@color/dim_grey"
+        android:paddingLeft="5dp"
+        android:paddingRight="5dp"/>
+
+</android.support.percent.PercentRelativeLayout>
